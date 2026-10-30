@@ -3,14 +3,15 @@ name: generate actions lockfile
 # Pins every action used by this repo's workflows to a verified commit, using
 # github/gh-actions-lock. Run it from the Actions tab (Run workflow) after adding a
 # workflow or changing any `uses:` line. It uploads `actions.lock` as an artifact;
-# commit that file to .github/workflows/actions.lock.
+# commit that file to .github/workflows/actions.lock (also pushed to the
+# actions-lock-output branch for easy copying).
 # (The job's GITHUB_TOKEN can't write to .github/workflows, so it can't commit itself.)
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write   # only used to push the actions-lock-output branch
 
 jobs:
   lock:
@@ -33,3 +34,16 @@ jobs:
         with:
           name: actions-lock
           path: .github/workflows/actions.lock
+      - name: Publish lockfile to the actions-lock-output branch
+        # GITHUB_TOKEN may not write under .github/workflows, but it can push this
+        # standalone branch; copy the file from there into .github/workflows.
+        run: |
+          cp .github/workflows/actions.lock "$RUNNER_TEMP/actions.lock"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan actions-lock-output
+          git rm -rfq .
+          cp "$RUNNER_TEMP/actions.lock" actions.lock
+          git add actions.lock
+          git commit -m "Generated actions.lock for ${GITHUB_SHA::7}"
+          git push -f origin actions-lock-output
