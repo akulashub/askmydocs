@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "askmydocs"
+version = "0.1.0"
+description = "Production-grade, citation-enforced RAG over a domain corpus (FastAPI docs), with hybrid retrieval, re-ranking and CI-gated evaluation."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "chromadb>=0.5",
+  "rank-bm25>=0.2.2",
+  "langgraph>=0.2",
+  "pydantic>=2",
+  "pyyaml>=6",
+  "tiktoken>=0.7",
+]
+
+[project.optional-dependencies]
+# Real neural models: bge embeddings, cross-encoder re-ranker, NLI faithfulness judge
+models = ["sentence-transformers>=3.0"]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.40"]
+cohere = ["cohere>=5"]
+# langchain-community 0.4 removed a module ragas 0.4.x imports; keep the pin until ragas updates
+ragas = ["ragas>=0.3,<0.5", "langchain-community>=0.3,<0.4", "langchain-anthropic>=0.3", "langchain-openai>=0.3"]
+loaders = ["pypdf>=4", "beautifulsoup4>=4.12"]
+api = ["fastapi>=0.110", "uvicorn>=0.29"]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+askmydocs = "askmydocs.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["askmydocs*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B905"]  # zip() over deliberately unequal sequences
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

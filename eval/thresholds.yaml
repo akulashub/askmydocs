@@ -1,0 +1,40 @@
+# Quality gates enforced by `askmydocs eval` (and therefore by CI).
+# A metric missing from a run (e.g. faithfulness with --judge none) is skipped.
+# latency_* entries are maxima; everything else is a minimum.
+
+min_judge_coverage: 0.9      # fail if the faithfulness judge errored on >10% of answers
+max_regression: 0.03          # allowed drop vs eval/baselines/<profile>.json
+regression_metrics:
+  - context_recall@k
+  - mrr@k
+  - refusal_accuracy
+  - answer_rate
+  - faithfulness
+  - citation_doc_accuracy
+
+profiles:
+  offline:                     # hashing embeddings + lexical rerank + extractive answers
+    retrieval_hit@candidates: 0.85
+    context_recall@k: 0.75
+    mrr@k: 0.60
+    answer_rate: 0.80
+    refusal_accuracy: 0.70       # 9/12 observed; lexical stand-in misses some hard negatives
+    faithfulness: 0.90
+    citation_doc_accuracy: 0.85
+  models:                      # bge + cross-encoder + NLI, extractive answers (no API key)
+    retrieval_hit@candidates: 0.90
+    context_recall@k: 0.85
+    mrr@k: 0.70
+    answer_rate: 0.70
+    refusal_accuracy: 0.75
+    faithfulness: 0.80
+    citation_doc_accuracy: 0.85
+  default:                     # full system: bge + cross-encoder + Claude, judged by RAGAS
+    retrieval_hit@candidates: 0.90
+    context_recall@k: 0.85
+    mrr@k: 0.70
+    answer_rate: 0.85
+    refusal_accuracy: 0.85
+    faithfulness: 0.85
+    citation_doc_accuracy: 0.85
+    latency_p95_s: 15.0

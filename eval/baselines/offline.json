@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "profile": "offline",
+    "prompt": "answer_with_citations@1.2.0#3cb88575e03f",
+    "llm": "extractive-v1",
+    "reranker": "lexical-v1",
+    "embedder": "hashing-v1-1024",
+    "judge": "lexical@0.7",
+    "golden": "golden.jsonl",
+    "commit": "local",
+    "timestamp": "2026-10-30T01:19:30Z"
+  },
+  "metrics": {
+    "n_items": 77,
+    "n_answerable": 65,
+    "n_unanswerable": 12,
+    "retrieval_hit@candidates": 1.0,
+    "context_recall@k": 0.9846,
+    "mrr@k": 0.8423,
+    "answer_rate": 0.8923,
+    "refusal_accuracy": 0.75,
+    "hard_negative_refusal": 0.6,
+    "faithfulness": 0.9828,
+    "judge_coverage": 1.0,
+    "citation_doc_accuracy": 0.8966,
+    "citation_paragraph_accuracy": 0.5517,
+    "answer_f1": 0.1966,
+    "raw_supported_fraction": 1.0,
+    "latency_p50_s": 0.02,
+    "latency_p95_s": 0.028
+  }
+}

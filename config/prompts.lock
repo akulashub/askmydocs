@@ -1,0 +1,14 @@
+{
+  "answer_with_citations": {
+    "hash": "3cb88575e03f",
+    "version": "1.2.0"
+  },
+  "context_block": {
+    "hash": "8824d4254c95",
+    "version": "1.0.0"
+  },
+  "faithfulness_judge": {
+    "hash": "bfb2f4b8a86e",
+    "version": "1.0.0"
+  }
+}
