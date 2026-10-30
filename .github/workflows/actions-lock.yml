@@ -1,0 +1,35 @@
+name: generate actions lockfile
+
+# Pins every action used by this repo's workflows to a verified commit, using
+# github/gh-actions-lock. Run it from the Actions tab (Run workflow) after adding a
+# workflow or changing any `uses:` line. It uploads `actions.lock` as an artifact;
+# commit that file to .github/workflows/actions.lock.
+# (The job's GITHUB_TOKEN can't write to .github/workflows, so it can't commit itself.)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate .github/workflows/actions.lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install github/gh-actions-lock
+          gh actions-lock
+          gh actions-lock --verify-local
+          echo "## actions.lock" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat .github/workflows/actions.lock >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: actions-lock
+          path: .github/workflows/actions.lock
