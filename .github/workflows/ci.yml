@@ -29,8 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4.4.0
+      - uses: actions/setup-python@v5.6.0
         with:
           python-version: "3.11"
           cache: pip
@@ -44,7 +44,7 @@ jobs:
       - name: Retrieval ablation
         if: always()
         run: python scripts/ablation.py --profile offline
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: eval-offline
@@ -56,8 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4.4.0
+      - uses: actions/setup-python@v5.6.0
         with:
           python-version: "3.11"
           cache: pip
@@ -65,7 +65,7 @@ jobs:
         run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e ".[models,dev]"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v4.3.0
         with:
           path: ~/.cache/huggingface
           key: hf-${{ hashFiles('config/settings.yaml') }}
@@ -74,7 +74,7 @@ jobs:
       - name: Retrieval ablation
         if: always()
         run: python scripts/ablation.py --profile models
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: eval-models
@@ -94,9 +94,9 @@ jobs:
           if [ -n "$ANTHROPIC_API_KEY" ]; then echo "present=true" >> "$GITHUB_OUTPUT";
           else echo "present=false" >> "$GITHUB_OUTPUT";
                echo "ANTHROPIC_API_KEY secret not set: skipping LLM eval tier." >> "$GITHUB_STEP_SUMMARY"; fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.4.0
         if: steps.key.outputs.present == 'true'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5.6.0
         if: steps.key.outputs.present == 'true'
         with:
           python-version: "3.11"
@@ -105,7 +105,7 @@ jobs:
         run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e ".[models,anthropic,ragas]"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v4.3.0
         if: steps.key.outputs.present == 'true'
         with:
           path: ~/.cache/huggingface
@@ -113,7 +113,7 @@ jobs:
       - name: Eval gate (full system, RAGAS faithfulness)
         if: steps.key.outputs.present == 'true'
         run: askmydocs --profile default eval --judge ragas --allow-uncalibrated
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         if: always() && steps.key.outputs.present == 'true'
         with:
           name: eval-llm

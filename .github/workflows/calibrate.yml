@@ -24,8 +24,8 @@ jobs:
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4.4.0
+      - uses: actions/setup-python@v5.6.0
         with:
           python-version: "3.11"
           cache: pip
@@ -33,7 +33,7 @@ jobs:
         run: |
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e ".[models,anthropic,ragas]"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v4.3.0
         with:
           path: ~/.cache/huggingface
           key: hf-${{ hashFiles('config/settings.yaml') }}
@@ -55,7 +55,7 @@ jobs:
             echo "## Suggested thresholds"
             python scripts/suggest_thresholds.py ${{ github.event.inputs.profiles }}
           } | tee -a "$GITHUB_STEP_SUMMARY" > eval/baselines/SUGGESTED_THRESHOLDS.md
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         with:
           name: calibration
           path: |

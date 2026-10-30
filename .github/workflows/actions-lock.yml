@@ -2,9 +2,9 @@ name: generate actions lockfile
 
 # Pins every action used by this repo's workflows to a verified commit, using
 # github/gh-actions-lock. Run it from the Actions tab (Run workflow) after adding a
-# workflow or changing any `uses:` line. It uploads `actions.lock` as an artifact;
-# commit that file to .github/workflows/actions.lock (also pushed to the
-# actions-lock-output branch for easy copying).
+# workflow or changing any `uses:` line. The updated .github/workflows directory
+# (lockfile plus workflows with narrowed tags) is pushed to the actions-lock-output
+# branch; copy the whole directory back to main. They must change together.
 # (The job's GITHUB_TOKEN can't write to .github/workflows, so it can't commit itself.)
 
 on:
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.4.0
       - name: Generate .github/workflows/actions.lock
         env:
           GH_TOKEN: ${{ github.token }}
@@ -30,7 +30,7 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           cat .github/workflows/actions.lock >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4.6.2
         with:
           name: actions-lock
           path: .github/workflows/actions.lock
@@ -38,12 +38,14 @@ jobs:
         # GITHUB_TOKEN may not write under .github/workflows, but it can push this
         # standalone branch; copy the file from there into .github/workflows.
         run: |
-          cp .github/workflows/actions.lock "$RUNNER_TEMP/actions.lock"
+          # gh actions-lock also narrows `uses:` tags (v4 -> v4.4.0) in the workflows,
+          # so publish the whole directory: lockfile and workflows must change together.
+          cp -r .github/workflows "$RUNNER_TEMP/workflows"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan actions-lock-output
           git rm -rfq .
-          cp "$RUNNER_TEMP/actions.lock" actions.lock
-          git add actions.lock
+          mkdir -p .github && cp -r "$RUNNER_TEMP/workflows" .github/workflows
+          git add .github/workflows
           git commit -m "Generated actions.lock for ${GITHUB_SHA::7}"
           git push -f origin actions-lock-output
