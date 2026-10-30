@@ -86,3 +86,19 @@ def test_index_is_rebuilt_when_ingestion_code_changes(offline_settings, tmp_path
     monkeypatch.setattr(ix, "pipeline_fingerprint", lambda: "different-code")
     ix.ensure_index(settings, log=lambda *a: None)
     assert len(builds) == 2                      # chunker code changed -> rebuilt
+
+
+def test_offline_profile_pins_regex_tokenizer_even_if_tiktoken_available(monkeypatch):
+    from askmydocs import tokens
+    from askmydocs.config import load_settings
+
+    class FakeEnc:
+        def encode(self, text, disallowed_special=()):
+            return [0] * 999
+
+    monkeypatch.setattr(tokens, "_tiktoken", lambda: FakeEnc())
+    load_settings(profile="offline")
+    assert tokens.tokenizer_name() == "regex-approx" and tokens.count_tokens("one two") == 2
+    load_settings(profile="default")
+    assert tokens.tokenizer_name() == "tiktoken:cl100k_base"
+    load_settings(profile="offline")  # leave the session in offline mode for later tests

@@ -77,4 +77,8 @@ def load_settings(
     if overrides:
         data = _deep_merge(data, overrides)
     data["profile"] = profile
+
+    from .tokens import set_tokenizer
+
+    set_tokenizer(data.get("chunking", {}).get("tokenizer", "auto"))
     return Settings(data)

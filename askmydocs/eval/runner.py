@@ -192,6 +192,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--limit", type=int)
     p.add_argument("--update-baseline", action="store_true", help="write this run's metrics as the new baseline")
     p.add_argument("--no-gate", action="store_true", help="report only; always exit 0")
+    p.add_argument("--allow-uncalibrated", action="store_true",
+                   help="if this profile has no committed baseline yet, report but don't fail (CI bootstrap)")
     args = p.parse_args(argv)
 
     settings = load_settings(profile=args.profile)
@@ -241,6 +243,14 @@ def main(argv: list[str] | None = None) -> int:
         BASELINES.mkdir(parents=True, exist_ok=True)
         baseline_path.write_text(json.dumps({"meta": meta, "metrics": metrics}, indent=2) + "\n")
         print(f"Baseline updated: {baseline_path}")
+        return 0
+    if failures and args.allow_uncalibrated and baseline is None:
+        warn = (f"\n> ⚠️ Profile `{args.profile}` has no baseline yet, so its gates are not enforced. "
+                f"Run the **calibrate** workflow and commit `eval/baselines/{args.profile}.json`.\n")
+        print(warn, file=sys.stderr)
+        if os.environ.get("GITHUB_STEP_SUMMARY"):
+            with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+                fh.write(warn)
         return 0
     if failures and not args.no_gate:
         print("EVAL GATE FAILED:\n  " + "\n  ".join(failures), file=sys.stderr)

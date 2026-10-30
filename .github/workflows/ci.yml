@@ -6,6 +6,8 @@ name: ci
 #   3. llm      - full system with Claude, judged by RAGAS (when ANTHROPIC_API_KEY is set)
 # A tier fails the build if any metric falls below eval/thresholds.yaml or regresses
 # more than `max_regression` against eval/baselines/<profile>.json.
+# Tiers 2 and 3 only enforce their gates once a baseline is committed for them
+# (run the `calibrate` workflow once); until then they report without failing.
 
 on:
   pull_request:
@@ -68,7 +70,7 @@ jobs:
           path: ~/.cache/huggingface
           key: hf-${{ hashFiles('config/settings.yaml') }}
       - name: Eval gate (bge + cross-encoder + NLI judge)
-        run: askmydocs --profile models eval --judge nli
+        run: askmydocs --profile models eval --judge nli --allow-uncalibrated
       - name: Retrieval ablation
         if: always()
         run: python scripts/ablation.py --profile models
@@ -110,7 +112,7 @@ jobs:
           key: hf-${{ hashFiles('config/settings.yaml') }}
       - name: Eval gate (full system, RAGAS faithfulness)
         if: steps.key.outputs.present == 'true'
-        run: askmydocs --profile default eval --judge ragas
+        run: askmydocs --profile default eval --judge ragas --allow-uncalibrated
       - uses: actions/upload-artifact@v4
         if: always() && steps.key.outputs.present == 'true'
         with:

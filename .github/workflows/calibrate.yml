@@ -1,0 +1,63 @@
+name: calibrate
+
+# Run once (and again after any deliberate quality change) from the Actions tab:
+# Actions -> calibrate -> Run workflow.
+# Produces eval/baselines/<profile>.json for the neural + Claude tiers and a
+# suggested-thresholds snippet. Download the `calibration` artifact, copy the files
+# into the repo, paste the snippet into eval/thresholds.yaml, and commit.
+
+on:
+  workflow_dispatch:
+    inputs:
+      profiles:
+        description: "Profiles to calibrate (space separated): models default"
+        default: "models default"
+        required: true
+
+env:
+  PYTHONHASHSEED: "0"
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[models,anthropic,ragas]"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('config/settings.yaml') }}
+      - name: Run evals and write baselines
+        run: |
+          for p in ${{ github.event.inputs.profiles }}; do
+            if [ "$p" = "default" ] && [ -z "$ANTHROPIC_API_KEY" ]; then
+              echo "Skipping 'default': ANTHROPIC_API_KEY secret is not set." | tee -a "$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+            judge=nli; [ "$p" = "default" ] && judge=ragas
+            echo "::group::eval $p (judge=$judge)"
+            askmydocs --profile "$p" eval --judge "$judge" --update-baseline
+            echo "::endgroup::"
+          done
+      - name: Suggest thresholds
+        run: |
+          {
+            echo "## Suggested thresholds"
+            python scripts/suggest_thresholds.py ${{ github.event.inputs.profiles }}
+          } | tee -a "$GITHUB_STEP_SUMMARY" > eval/baselines/SUGGESTED_THRESHOLDS.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calibration
+          path: |
+            eval/baselines/
+            eval/reports/

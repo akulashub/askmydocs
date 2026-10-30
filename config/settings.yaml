@@ -12,6 +12,7 @@ chunking:
   min_tokens: 120         # tiny trailing chunks get merged into the previous one
   overlap_tokens: 100     # carried over from the end of the previous chunk
   section_break_tokens: 450  # break at an H2 boundary only once a chunk is this full
+  tokenizer: "auto"       # auto | tiktoken | regex  (offline pins regex for reproducibility)
 
 index:
   dir: ".index"           # Chroma persistence + chunk store (git-ignored)
@@ -62,6 +63,7 @@ profiles:
   # Fully offline + deterministic: no model downloads, no API keys.
   # Used for unit tests and for the always-on CI eval job.
   offline:
+    chunking: { tokenizer: "regex" }
     embeddings: { backend: "hashing", model: "hashing-v1" }
     reranker: { backend: "lexical" }
     generation: { backend: "extractive", model: "extractive-v1" }

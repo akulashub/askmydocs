@@ -62,6 +62,9 @@ flowchart LR
 
 ## Quick start
 
+> Putting it on GitHub, adding your API key and calibrating the real-model gates: see
+> [`docs/SETUP.md`](docs/SETUP.md).
+
 ```bash
 pip install -e ".[dev,api,loaders]"            # core; enough for the offline profile
 askmydocs --profile offline ask "How do I override a dependency in tests?"
@@ -111,10 +114,9 @@ askmydocs --profile offline eval
 | citation_doc_accuracy | 0.897 | a cited source is the gold document |
 | latency p95 | 0.03 s | end to end, offline backends |
 
-Numbers for the `models` and `default` profiles come from the CI runs (they need model downloads / an API
-key, which the environment this was built in didn't have). **Before relying on those gates, run each once
-and calibrate**: `make baseline PROFILE=models` writes `eval/baselines/models.json`, and the thresholds in
-`eval/thresholds.yaml` for those profiles are provisional starting points.
+Numbers for the `models` and `default` profiles come from CI (they need model downloads / an API key).
+Until a profile has a committed baseline, its CI tier reports metrics without failing; the one-click
+**calibrate** workflow writes those baselines and suggests thresholds (see `docs/SETUP.md`).
 
 **Gates** (`eval/thresholds.yaml`): each profile has minimums per metric; on top of that any metric dropping
 more than 0.03 below the committed baseline fails the build; and if the faithfulness judge errors on more
@@ -194,8 +196,9 @@ askmydocs/
   api.py, cli.py
 config/settings.yaml, prompts.yaml, prompts.lock
 eval/golden.jsonl, thresholds.yaml, baselines/
-scripts/build_golden.py, ablation.py, fetch_corpus.sh
-tests/                   24 tests: chunking, retrieval, guardrails, dataset + prompt integrity
+scripts/build_golden.py, ablation.py, suggest_thresholds.py, fetch_corpus.sh
+docs/SETUP.md            GitHub, secrets and calibration, step by step
+tests/                   25 tests: chunking, retrieval, guardrails, dataset + prompt integrity
 ```
 
 Corpus: FastAPI docs at commit `79cab5b`, © Sebastián Ramírez, MIT License (`data/corpus/fastapi/LICENSE`).
